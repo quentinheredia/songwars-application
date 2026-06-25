@@ -623,6 +623,154 @@ a.contact-item:hover {
   stroke: none;
 }
 
+.events-page {
+  width: min(100%, 620px);
+  padding: 28px 0 70px;
+}
+.events-header {
+  margin: 0 auto 32px;
+  text-align: center;
+}
+.events-header h1 {
+  margin: 0;
+  font-family: "RoadRage", Impact, sans-serif;
+  font-size: clamp(3.8rem, 9vw, 6.5rem);
+  font-weight: 400;
+  line-height: 0.88;
+  letter-spacing: 0.02em;
+  text-shadow: 0 8px 24px #000;
+}
+.events-header h1 em {
+  color: var(--red);
+  font-style: normal;
+}
+.events-header > p:last-child {
+  margin: 16px auto 0;
+  color: #aaaab2;
+}
+.event-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 22px;
+  background: rgba(10, 10, 14, 0.78);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+}
+.event-image {
+  position: relative;
+  height: 225px;
+  overflow: hidden;
+}
+.event-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(10, 10, 14, 0.9)),
+    linear-gradient(90deg, rgba(179, 0, 0, 0.18), transparent 55%);
+}
+.event-image img {
+  object-fit: cover;
+  object-position: center 38%;
+  filter: saturate(0.72) contrast(1.12);
+}
+.event-image > span {
+  position: absolute;
+  z-index: 1;
+  top: 18px;
+  left: 18px;
+  padding: 7px 11px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+.event-content {
+  padding: 4px clamp(24px, 6vw, 40px) clamp(26px, 6vw, 40px);
+}
+.event-heading {
+  margin-top: -17px;
+  position: relative;
+  z-index: 1;
+}
+.event-heading p {
+  margin: 0 0 3px;
+  color: var(--red);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.event-heading h2 {
+  margin: 0;
+  font-family: "RoadRage", Impact, sans-serif;
+  font-size: clamp(2.8rem, 7vw, 4.2rem);
+  font-weight: 400;
+  line-height: 1;
+}
+.event-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 25px 0 28px;
+  border-block: 1px solid rgba(255, 255, 255, 0.1);
+}
+.event-details div {
+  min-width: 0;
+  padding: 16px 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.event-details div:nth-child(3),
+.event-details div:last-child {
+  border-right: 0;
+}
+.event-details div:nth-child(n + 4) {
+  grid-column: span 1;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.event-details div:nth-child(4) {
+  grid-column: span 2;
+}
+.event-details dt {
+  color: #73737c;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.event-details dd {
+  margin: 5px 0 0;
+  color: #ededf0;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+}
+.event-apply-button {
+  min-height: 56px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--red);
+  border-radius: 12px;
+  background: var(--red);
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  box-shadow: 0 14px 38px rgba(179, 0, 0, 0.28);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.event-apply-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 44px rgba(179, 0, 0, 0.44);
+}
+
 .apply-page {
   width: min(100%, 880px);
   padding: 35px 0 70px;
@@ -906,25 +1054,19 @@ a.contact-item:hover {
   }
 }
 @media (max-width: 540px) {
-  .ambient {
-    --primary-parallax: 0.035;
-    --secondary-parallax: -0.02;
-  }
   .photo-primary {
     inset: -8% -28%;
     opacity: 0.2;
-    transform: translate3d(
-        0,
-        calc(var(--page-scroll-y) * var(--primary-parallax)),
-        0
-      )
-      scale(1.12);
+    transform: scale(1.12);
+    will-change: auto;
   }
   .photo-secondary {
     top: 40%;
     right: -24%;
     width: 82vw;
     opacity: 0.1;
+    transform: none;
+    will-change: auto;
   }
   .apply-theme .photo-secondary {
     left: -24%;
@@ -1000,8 +1142,53 @@ a.contact-item:hover {
   .apply-page {
     padding-top: 20px;
   }
+  .events-page {
+    width: min(86vw, 520px);
+    padding-top: 12px;
+  }
+  .events-header {
+    margin-bottom: 24px;
+  }
+  .event-image {
+    height: 190px;
+  }
+  .event-content {
+    padding-inline: 20px;
+  }
+  .event-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .event-details div,
+  .event-details div:nth-child(3),
+  .event-details div:nth-child(4),
+  .event-details div:last-child {
+    grid-column: span 1;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .event-details div:nth-child(-n + 2) {
+    border-top: 0;
+  }
+  .event-details div:nth-child(even),
+  .event-details div:last-child {
+    border-right: 0;
+  }
+  .event-details div:last-child {
+    grid-column: span 2;
+    text-align: center;
+  }
   .apply-header {
     margin-bottom: 28px;
+  }
+  .form-section legend {
+    max-width: calc(100vw - 72px);
+    padding-right: 8px;
+    font-size: clamp(1.05rem, 5.2vw, 1.35rem);
+    letter-spacing: 0.07em;
+    white-space: nowrap;
+  }
+  .form-section legend span {
+    margin-right: 6px;
   }
   .form-grid.two-columns {
     grid-template-columns: 1fr;

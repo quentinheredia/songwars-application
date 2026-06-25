@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function LandingLayout({
   children,
@@ -11,28 +11,18 @@ export default function LandingLayout({
 }) {
   const pathname = usePathname();
   const [navHidden, setNavHidden] = useState(false);
-  const lastScrollY = useRef(0);
 
   useEffect(() => {
-    lastScrollY.current = window.scrollY;
     setNavHidden(false);
     let frameId = 0;
 
     function handleScroll() {
       const currentScrollY = window.scrollY;
-      const scrollDifference = currentScrollY - lastScrollY.current;
+      const isMobile = window.matchMedia("(max-width: 540px)").matches;
 
-      if (currentScrollY <= 24) {
-        setNavHidden(false);
-      } else if (scrollDifference > 6) {
-        setNavHidden(true);
-      } else if (scrollDifference < -6) {
-        setNavHidden(false);
-      }
+      setNavHidden(currentScrollY > 32);
 
-      lastScrollY.current = currentScrollY;
-
-      if (!frameId) {
+      if (!isMobile && !frameId) {
         frameId = window.requestAnimationFrame(() => {
           document.documentElement.style.setProperty(
             "--page-scroll-y",
@@ -43,10 +33,14 @@ export default function LandingLayout({
       }
     }
 
-    document.documentElement.style.setProperty(
-      "--page-scroll-y",
-      `${window.scrollY}px`,
-    );
+    if (!window.matchMedia("(max-width: 540px)").matches) {
+      document.documentElement.style.setProperty(
+        "--page-scroll-y",
+        `${window.scrollY}px`,
+      );
+    } else {
+      document.documentElement.style.setProperty("--page-scroll-y", "0px");
+    }
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -57,7 +51,7 @@ export default function LandingLayout({
   const pageTheme =
     pathname === "/contact"
       ? "contact-theme"
-      : pathname === "/apply"
+      : pathname.startsWith("/apply")
         ? "apply-theme"
         : "home-theme";
 
@@ -91,7 +85,7 @@ export default function LandingLayout({
             Contact
           </Link>
           <Link
-            className={`apply-button ${pathname === "/apply" ? "active" : ""}`}
+            className={`apply-button ${pathname.startsWith("/apply") ? "active" : ""}`}
             href="/apply"
           >
             Apply
