@@ -16,7 +16,71 @@ export default function ApplicationForm() {
     setStatus({ type: "submitting" });
 
     try {
-      const response = await fetch("/api/apply", { method: "POST", body: new FormData(event.currentTarget) });
+      const formData = new FormData(event.currentTarget);
+      const track = formData.get("track");
+      if (!(track instanceof File) || track.size === 0) {
+        throw new Error("Choose an audio file.");
+      }
+
+      const uploadUrlResponse = await fetch("/api/apply/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: track.name,
+          fileSize: track.size,
+          fileType: track.type,
+        }),
+      });
+      const uploadUrlPayload = (await uploadUrlResponse.json()) as {
+        message?: string;
+        path?: string;
+        signedUrl?: string;
+      };
+      if (
+        !uploadUrlResponse.ok ||
+        !uploadUrlPayload.path ||
+        !uploadUrlPayload.signedUrl
+      ) {
+        throw new Error(
+          uploadUrlPayload.message || "We could not prepare the track upload.",
+        );
+      }
+
+      const uploadBody = new FormData();
+      uploadBody.append("cacheControl", "3600");
+      uploadBody.append("", track);
+      const uploadResponse = await fetch(uploadUrlPayload.signedUrl, {
+        method: "PUT",
+        headers: { "x-upsert": "false" },
+        body: uploadBody,
+      });
+      if (!uploadResponse.ok) {
+        throw new Error("The track upload failed. Please try again.");
+      }
+
+      const genres = formData
+        .getAll("genres")
+        .filter((value): value is string => typeof value === "string");
+      const otherGenre = formData.get("other_genre");
+      if (typeof otherGenre === "string" && otherGenre.trim()) {
+        genres.push(otherGenre.trim());
+      }
+
+      const application = Object.fromEntries(
+        Array.from(formData.entries())
+          .filter(([key, value]) => key !== "track" && key !== "genres" && key !== "other_genre" && typeof value === "string")
+          .map(([key, value]) => [key, value]),
+      );
+
+      const response = await fetch("/api/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...application,
+          genres,
+          track_path: uploadUrlPayload.path,
+        }),
+      });
       const payload = (await response.json()) as { message?: string };
       if (!response.ok) throw new Error(payload.message || "We could not submit your application.");
 

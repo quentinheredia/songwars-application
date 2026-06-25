@@ -1,20 +1,22 @@
 import postgres from "postgres";
+import {
+  ACCEPTED_TRACK_TYPES,
+  getSupabaseAdmin,
+  MAX_TRACK_SIZE,
+  TRACK_BUCKET,
+} from "../../../lib/supabase-admin";
 
 export const runtime = "nodejs";
 
-const MAX_TRACK_SIZE = 10 * 1024 * 1024;
-const ACCEPTED_TRACK_TYPES = new Set([
-  "audio/mpeg",
-  "audio/wav",
-  "audio/x-wav",
-  "audio/mp4",
-  "audio/aac",
-]);
-
 class SubmissionError extends Error {}
 
-function text(form: FormData, key: string, required = false) {
-  const value = form.get(key);
+type ApplicationInput = Record<string, unknown> & {
+  genres?: unknown;
+  track_path?: unknown;
+};
+
+function text(input: ApplicationInput, key: string, required = false) {
+  const value = input[key];
   const normalized = typeof value === "string" ? value.trim() : "";
   const label = key.replaceAll("_", " ");
   if (required && !normalized)
@@ -35,15 +37,10 @@ function escapeHtml(value: string | null) {
 
 export async function POST(request: Request) {
   let sql: ReturnType<typeof postgres> | undefined;
+  let uploadedTrackPath: string | null = null;
+  let submissionSaved = false;
 
   try {
-    const contentLength = Number(request.headers.get("content-length") || 0);
-    if (contentLength > MAX_TRACK_SIZE + 1024 * 1024) {
-      throw new SubmissionError(
-        "The complete application upload is too large.",
-      );
-    }
-
     const databaseUrl = process.env.DATABASE_URL;
     const resendApiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.SUBMISSION_FROM_EMAIL;
@@ -60,21 +57,30 @@ export async function POST(request: Request) {
       );
     }
 
-    const form = await request.formData();
-    if (text(form, "website"))
+    const input = (await request.json()) as ApplicationInput;
+    if (text(input, "website"))
       return Response.json({ message: "Application received." });
-    if (form.get("consent") !== "on")
+    const trackPath = text(input, "track_path", true);
+    if (
+      !trackPath?.match(
+        /^submissions\/\d{4}-\d{2}-\d{2}\/[a-f0-9-]+-[^/]+$/i,
+      )
+    ) {
+      throw new SubmissionError("The uploaded track path is invalid.");
+    }
+    uploadedTrackPath = trackPath;
+    if (input.consent !== "on")
       throw new SubmissionError("You must confirm the submission agreement.");
 
-    const homeTown = text(form, "home_town", true);
-    const stageName = text(form, "stage_name", true);
-    const spotifyHandle = text(form, "spotify_handle", true);
-    const soundcloudHandle = text(form, "soundcloud_handle", true);
-    const otherMusicLinks = text(form, "other_music_links", true);
-    const instagramHandle = text(form, "instagram_handle", true);
-    const tiktokHandle = text(form, "tiktok_handle");
-    const youtubeChannel = text(form, "youtube_channel");
-    const livePerformancesValue = text(form, "live_performances");
+    const homeTown = text(input, "home_town", true);
+    const stageName = text(input, "stage_name", true);
+    const spotifyHandle = text(input, "spotify_handle", true);
+    const soundcloudHandle = text(input, "soundcloud_handle", true);
+    const otherMusicLinks = text(input, "other_music_links", true);
+    const instagramHandle = text(input, "instagram_handle", true);
+    const tiktokHandle = text(input, "tiktok_handle");
+    const youtubeChannel = text(input, "youtube_channel");
+    const livePerformancesValue = text(input, "live_performances");
     const livePerformances =
       livePerformancesValue === null ? null : Number(livePerformancesValue);
     if (
@@ -86,26 +92,32 @@ export async function POST(request: Request) {
       throw new SubmissionError("Live performances must be a valid number.");
     }
 
-    const genres = form
-      .getAll("genres")
-      .filter((value): value is string => typeof value === "string");
-    const otherGenre = text(form, "other_genre");
-    if (otherGenre) genres.push(otherGenre);
+    const genres = Array.isArray(input.genres)
+      ? input.genres.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [];
     if (genres.length === 0)
       throw new SubmissionError("Select at least one genre.");
     if (genres.length > 9 || genres.some((genre) => genre.length > 60))
       throw new SubmissionError("The genre selection is invalid.");
 
-    const track = form.get("track");
-    if (!(track instanceof File) || track.size === 0)
-      throw new SubmissionError("An audio track is required.");
-    if (track.size > MAX_TRACK_SIZE)
-      throw new SubmissionError("The audio track must be 10 MB or smaller.");
-    if (!ACCEPTED_TRACK_TYPES.has(track.type))
-      throw new SubmissionError("Upload an MP3, WAV, M4A, or AAC audio file.");
-    const trackContent = Buffer.from(await track.arrayBuffer()).toString(
-      "base64",
-    );
+    const supabase = getSupabaseAdmin();
+    const { data: trackInfo, error: trackInfoError } = await supabase.storage
+      .from(TRACK_BUCKET)
+      .info(trackPath);
+    if (trackInfoError || !trackInfo) {
+      throw new SubmissionError("The uploaded track could not be verified.");
+    }
+    if (
+      !trackInfo.size ||
+      trackInfo.size > MAX_TRACK_SIZE ||
+      !trackInfo.contentType ||
+      !ACCEPTED_TRACK_TYPES.includes(trackInfo.contentType as never)
+    ) {
+      await supabase.storage.from(TRACK_BUCKET).remove([trackPath]);
+      throw new SubmissionError("The uploaded track is not a valid audio file.");
+    }
 
     sql = postgres(databaseUrl, {
       ssl: "require",
@@ -117,13 +129,20 @@ export async function POST(request: Request) {
       insert into public."Submissions" (
         created_at, home_town, live_performances, stage_name, spotify_handle,
         soundcloud_handle, other_music_links, instagram_handle, tiktok_handle,
-        youtube_channel, genres
+        youtube_channel, genres, track_path
       ) values (
         now(), ${homeTown}, ${livePerformances}, ${stageName}, ${spotifyHandle},
         ${soundcloudHandle}, ${otherMusicLinks}, ${instagramHandle}, ${tiktokHandle},
-        ${youtubeChannel}, ${sql.json(genres)}
+        ${youtubeChannel}, ${sql.json(genres)}, ${trackPath}
       ) returning id
     `;
+    submissionSaved = true;
+
+    const { data: signedTrack, error: signedTrackError } =
+      await supabase.storage
+        .from(TRACK_BUCKET)
+        .createSignedUrl(trackPath, 60 * 60 * 24 * 7);
+    if (signedTrackError) throw signedTrackError;
 
     const rows: [string, string | null][] = [
       ["Stage name", stageName],
@@ -136,6 +155,7 @@ export async function POST(request: Request) {
       ["TikTok", tiktokHandle],
       ["YouTube", youtubeChannel],
       ["Genres", genres.join(", ")],
+      ["Track", signedTrack.signedUrl],
     ];
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -148,13 +168,7 @@ export async function POST(request: Request) {
         to: ["info@livesongwars.com"],
         cc: ["qnheredia@gmail.com", "lilyen43@gmail.com"],
         subject: `New Live Song War application: ${stageName}`,
-        html: `<h1>New artist application</h1><p>Submission ID: ${inserted[0].id}</p><table cellpadding="8">${rows.map(([label, value]) => `<tr><td><strong>${escapeHtml(label)}</strong></td><td>${escapeHtml(value)}</td></tr>`).join("")}</table>`,
-        attachments: [
-          {
-            filename: track.name.replaceAll(/[^a-zA-Z0-9._-]/g, "_"),
-            content: trackContent,
-          },
-        ],
+        html: `<h1>New artist application</h1><p>Submission ID: ${inserted[0].id}</p><table cellpadding="8">${rows.map(([label, value]) => `<tr><td><strong>${escapeHtml(label)}</strong></td><td>${label === "Track" && value ? `<a href="${escapeHtml(value)}">Listen to submitted track</a> <small>(link expires in 7 days)</small>` : escapeHtml(value)}</td></tr>`).join("")}</table>`,
       }),
     });
 
@@ -179,6 +193,15 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
+    if (uploadedTrackPath && !submissionSaved) {
+      try {
+        await getSupabaseAdmin().storage
+          .from(TRACK_BUCKET)
+          .remove([uploadedTrackPath]);
+      } catch (cleanupError) {
+        console.error("Could not remove orphaned track:", cleanupError);
+      }
+    }
     if (error instanceof SubmissionError)
       return Response.json({ message: error.message }, { status: 400 });
     console.error("Application submission failed:", error);

@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "db:migrate:storage": "node scripts/migrate-storage.mjs",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "@vercel/speed-insights": "^2.0.0",
     "next": "latest",
     "postgres": "^3.4.9",
     "react": "latest",
