@@ -16,6 +16,7 @@ export default function LandingLayout({
   useEffect(() => {
     lastScrollY.current = window.scrollY;
     setNavHidden(false);
+    let frameId = 0;
 
     function handleScroll() {
       const currentScrollY = window.scrollY;
@@ -30,15 +31,42 @@ export default function LandingLayout({
       }
 
       lastScrollY.current = currentScrollY;
+
+      if (!frameId) {
+        frameId = window.requestAnimationFrame(() => {
+          document.documentElement.style.setProperty(
+            "--page-scroll-y",
+            `${window.scrollY}px`,
+          );
+          frameId = 0;
+        });
+      }
     }
 
+    document.documentElement.style.setProperty(
+      "--page-scroll-y",
+      `${window.scrollY}px`,
+    );
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frameId) window.cancelAnimationFrame(frameId);
+    };
   }, [pathname]);
 
+  const pageTheme =
+    pathname === "/contact"
+      ? "contact-theme"
+      : pathname === "/apply"
+        ? "apply-theme"
+        : "home-theme";
+
   return (
-    <div className={`site-shell ${pathname === "/contact" ? "contact-theme" : ""}`}>
+    <div className={`site-shell ${pageTheme}`}>
       <div className="ambient" aria-hidden="true">
+        <div className="photo-layer photo-primary" />
+        <div className="photo-layer photo-secondary" />
+        <div className="photo-scrim" />
         <div className="beam beam-red" />
         <div className="beam beam-blue" />
         <div className="stage-haze" />
@@ -50,7 +78,9 @@ export default function LandingLayout({
         aria-label="Primary navigation"
       >
         <Link href="/" className="brand" aria-label="Live Song War home">
-          <span className="brand-name">LIVE SONG WAR</span>
+          <span className="brand-name">
+            LIVE SONG <span className="brand-war war-word">WARS</span>
+          </span>
         </Link>
 
         <div className="nav-actions">
