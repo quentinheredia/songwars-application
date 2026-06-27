@@ -14,11 +14,11 @@ export default function July2026ApplicationPage() {
         <header className="apply-header">
           <p className="apply-kicker">Canada · July 2026</p>
           <h1>
-            ENTER THE <em>WAR</em>
+            SONG <em>WARS</em> APPLICATION
           </h1>
           <p>
-            Tell us about your sound and send your strongest track. Fields
-            marked with an asterisk are required.
+            Tell us about yourself and upload a track. If accepted, you will be
+            added to our exlcusive Song Wars discord server.
           </p>
         </header>
         <ApplicationForm />

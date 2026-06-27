@@ -9,7 +9,7 @@ export default function Home() {
         <p className="eyebrow">
           <span className="eyebrow-line" />
           <span className="eyebrow-text">
-            Toronto&apos;s FIRST live music showdown
+            Toronto&apos;s FIRST ever live song wars event
           </span>
           <span className="eyebrow-line" />
         </p>
@@ -21,11 +21,13 @@ export default function Home() {
         <div className="divider" aria-hidden="true">
           <span>★</span>
         </div>
-        <p className="hero-copy"></p>
+        <p className="hero-copy">
+          Apply below to compete in the first ever live song wars.
+        </p>
         <a className="primary-cta" href="/apply">
           <span>APPLY</span>
         </a>
-        <p className="limited-copy"></p>
+        <p className="limited-copy">Limited spots available!</p>
       </section>
     </LandingLayout>
   );

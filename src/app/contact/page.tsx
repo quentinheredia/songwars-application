@@ -14,7 +14,8 @@ export default function Contact() {
           CONTACT <em>US</em>
         </h1>
         <p className="contact-intro">
-          Questions about the application process? Talk to the team.
+          Questions about the application process? Send us an email. Feel to
+          message us on Instagram as well!
         </p>
 
         <div className="contact-list">
@@ -25,8 +26,8 @@ export default function Contact() {
               </svg>
             </span>
             <span>
-              <small>General inquiries</small>
-              <strong>SUBMISSIONS@LIVESONGWAR.COM</strong>
+              <small>Application inquiries</small>
+              <strong>SUBMISSIONS@LIVESONGWARS.COM</strong>
             </span>
             <span className="item-arrow">↗</span>
           </a>

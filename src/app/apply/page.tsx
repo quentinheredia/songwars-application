@@ -13,9 +13,11 @@ export default function ApplyPage() {
     <LandingLayout>
       <section className="events-page">
         <header className="events-header">
-          <p className="apply-kicker">Upcoming events</p>
-          <h1>CHOOSE YOUR <em>WAR</em></h1>
-          <p>Select an upcoming event to begin your artist application.</p>
+          <p className="apply-kicker">Upcoming song wars</p>
+          <h1>
+            JOIN THE<em>WAR</em>
+          </h1>
+          <p>Apply to the upcoming song wars.</p>
         </header>
 
         <article className="event-card">
@@ -33,7 +35,9 @@ export default function ApplyPage() {
           <div className="event-content">
             <div className="event-heading">
               <p>Canada · Summer 2026</p>
-              <h2>LIVE SONG WAR</h2>
+              <h2>
+                LIVE SONG <em>WARS</em>
+              </h2>
             </div>
 
             <dl className="event-details">
@@ -60,7 +64,7 @@ export default function ApplyPage() {
             </dl>
 
             <Link className="event-apply-button" href="/apply/july-2026">
-              Apply for this event
+              Apply
             </Link>
           </div>
         </article>
