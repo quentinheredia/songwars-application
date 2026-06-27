@@ -25,6 +25,19 @@ function safeFileName(fileName: string) {
 
 export async function POST(request: Request) {
   try {
+    const missingConfig = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"].filter(
+      (key) => !process.env[key],
+    );
+    if (missingConfig.length > 0) {
+      console.error(
+        `Track upload service is missing environment variables: ${missingConfig.join(", ")}`,
+      );
+      return Response.json(
+        { message: "Track uploads are temporarily unavailable." },
+        { status: 503 },
+      );
+    }
+
     const input = (await request.json()) as UploadRequest;
     const fileName =
       typeof input.fileName === "string" ? input.fileName.trim() : "";
