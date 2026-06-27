@@ -21,7 +21,9 @@ export default function July2026ApplicationPage() {
             added to our exlcusive Song Wars discord server.
           </p>
         </header>
-        <ApplicationForm />
+        <div className="application-shell">
+          <ApplicationForm />
+        </div>
       </section>
     </LandingLayout>
   );

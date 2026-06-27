@@ -24,7 +24,9 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  max-width: 100%;
   background: var(--ink);
+  overflow-x: hidden;
 }
 
 body {
@@ -773,9 +775,11 @@ a.contact-item:hover {
 
 .apply-page {
   width: min(100%, 880px);
+  max-width: 100%;
   padding: 35px 0 70px;
 }
 .apply-header {
+  width: min(100%, 650px);
   max-width: 650px;
   margin: 0 auto 42px;
   text-align: center;
@@ -802,12 +806,21 @@ a.contact-item:hover {
   font-style: normal;
 }
 .apply-header > p:last-child {
+  width: min(100%, 520px);
   max-width: 520px;
   margin: 18px auto 0;
   color: #aaaab2;
   line-height: 1.6;
 }
+.application-shell {
+  width: min(100%, 880px);
+  max-width: 100%;
+  margin-inline: auto;
+  overflow-x: clip;
+}
 .application-form {
+  width: 100%;
+  min-width: 0;
   display: grid;
   gap: 20px;
 }
@@ -1111,6 +1124,7 @@ a.contact-item:hover {
   }
   .main-content {
     padding: 125px 14px 24px;
+    overflow-x: clip;
   }
   .glass-card {
     border-radius: 23px;
@@ -1140,7 +1154,11 @@ a.contact-item:hover {
     height: 38px;
   }
   .apply-page {
+    width: 100%;
+    max-width: calc(100vw - 28px);
+    margin-inline: auto;
     padding-top: 20px;
+    overflow-x: clip;
   }
   .events-page {
     width: min(86vw, 520px);
@@ -1178,7 +1196,30 @@ a.contact-item:hover {
     text-align: center;
   }
   .apply-header {
+    width: 100%;
+    max-width: 100%;
     margin-bottom: 28px;
+    padding-inline: 0;
+  }
+  .apply-kicker {
+    max-width: 100%;
+    letter-spacing: 0.2em;
+    overflow-wrap: anywhere;
+  }
+  .apply-header h1 {
+    max-width: 100%;
+    font-size: clamp(2.9rem, 14.5vw, 4rem);
+    overflow-wrap: anywhere;
+  }
+  .apply-header > p:last-child {
+    width: 100%;
+    max-width: 100%;
+    padding-inline: 2px;
+  }
+  .application-shell {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
   }
   .form-section legend {
     max-width: calc(100vw - 72px);
